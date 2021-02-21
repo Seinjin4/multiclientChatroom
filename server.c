@@ -39,9 +39,9 @@ void* server_listening(void* arg)
         // struct sockaddr_in client_address;
         new_client.socket = accept(server_socket, 0, 0);
 
-        printf("New client - %d", client_count);
+        printf("New client - %d\n", client_count);
 
-        char server_message[256] = "\n Hello, welcone to the chatroom, client";
+        char server_message[256] = "\n Hello, welcone to the chatroom!\n";
 
         send(new_client.socket, server_message, sizeof(server_message), 0);
 
@@ -52,6 +52,7 @@ void* server_listening(void* arg)
 
 int main(int argc,char **argv) // [0] - filename, [1] - ipv4, [2] - port
 {
+
     WORD wVersionRequested = MAKEWORD(2,2); // Without this error 10092 occurs
     WSADATA wsaData;
 
@@ -75,11 +76,10 @@ int main(int argc,char **argv) // [0] - filename, [1] - ipv4, [2] - port
     server_address.sin_addr.S_un.S_addr = inet_addr(argv[1]);
 
     //bind the socket to our specified IP and port
-    if(bind(server_socket, (struct sockaddr*) &server_address, sizeof(server_address) == 0))
+    if(bind(server_socket, (struct sockaddr*) &server_address, sizeof(server_address)) == 0)
     {
         printf("Server %s:%d is running...\n\n", argv[1], server_port);
     }
-
     else
     {
         printf("\n ERROR: An issue occured while binding. Error code: %d \n\n", WSAGetLastError());     

@@ -37,7 +37,7 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
     int connection_status = connect(network_socket, (struct sockaddr *) &server_address, sizeof(server_address));
     
     // checking if everything is ok woth the connection
-    if(connection_status == -1)
+    if(connection_status != 0)
         printf("ERROR: An issue occured while making the connection. Error code: %d \n\n", WSAGetLastError());
 
     // receive data from the server
