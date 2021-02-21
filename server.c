@@ -33,12 +33,13 @@ void* server_listening(void* arg)
     while(1)
     {
         listen(server_socket, 5);
-        
+
         struct client new_client;
         // int client_socket;
         // struct sockaddr_in client_address;
         new_client.socket = accept(server_socket, 0, 0);
 
+        printf("New client - %d", client_count);
 
         char server_message[256] = "\n Hello, welcone to the chatroom, client";
 
