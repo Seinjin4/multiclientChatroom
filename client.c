@@ -10,7 +10,7 @@
     #include <netinet/in.h>
 #endif
 
-int main()
+int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
 {
     WORD wVersionRequested;
     WSADATA wsaData;
@@ -18,7 +18,7 @@ int main()
     int err = WSAStartup(wVersionRequested, &wsaData);
     if(err != 0)
     {
-        printf("ERROR: An issue occured while making the connection. Error code: %d \n\n", err);        
+        printf("ERROR: An issue occured with the WSA startup. Error code: %d \n\n", err);        
     }
 
     int network_socket;
@@ -29,8 +29,10 @@ int main()
     struct sockaddr_in server_address;
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(9002);
-    server_address.sin_addr.S_un.S_addr = inet_addr("192.168.1.203");
+    int server_port;
+    sscanf(argv[2],"%d",&server_port);
+    server_address.sin_port = htons(server_port);
+    server_address.sin_addr.S_un.S_addr = inet_addr(argv[1]);
 
     int connection_status = connect(network_socket, (struct sockaddr *) &server_address, sizeof(server_address));
     
