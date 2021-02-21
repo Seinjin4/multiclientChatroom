@@ -21,10 +21,31 @@ struct client
 struct client clients[5];
 int client_count = 0;
 
-pthread_t receive_distribute_thread_id;
+pthread_t recv_send_thread_id[5];
 pthread_t newcomer_thread_id;
 
 int server_socket;
+
+void* recv_send(void * arg)
+{
+    while(1)
+    {
+        struct client curr_client = *(struct client*) arg;
+
+        char message[256];
+        recv(curr_client.socket, message, sizeof(message), 0);
+
+        printf("Client %d: %s", &curr_client, message);
+
+        for(int i=0; i < client_count; i++)
+        {
+            if(&curr_client != &clients[i])
+            {
+                send(clients[i].socket, message, sizeof(message), 0);
+            }
+        }
+    }
+}
 
 void* server_listening(void* arg)
 {
@@ -45,10 +66,13 @@ void* server_listening(void* arg)
 
         send(new_client.socket, server_message, sizeof(server_message), 0);
 
+        pthread_create(&recv_send_thread_id[client_count], NULL, recv_send, (void *) &clients[client_count]);
+
         clients[0] = new_client;
         client_count++;
     }
 }
+
 
 int main(int argc,char **argv) // [0] - filename, [1] - ipv4, [2] - port
 {

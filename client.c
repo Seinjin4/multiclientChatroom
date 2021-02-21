@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 
@@ -9,6 +10,39 @@
     #include <sys/socket.h> // Linux specific i think
     #include <netinet/in.h>
 #endif
+
+int network_socket;
+
+
+pthread_t send_thread_id;
+pthread_t recv_thread_id;
+
+
+void* send_thread(void* arg)
+{
+    char message[256];
+    while(1)
+    {
+        printf("Message: ");
+        scanf("%s", message);
+        
+        if(send(network_socket, message, sizeof(message), 0) > sizeof(message)) // ok if send returns size of message or less
+        {
+            printf("There was an issue sending the message. Error code: %d\n", WSAGetLastError());
+        }
+    }
+}
+
+void* recv_thread(void* arg)
+{
+    char message[256];
+    while(1)
+    {
+        recv(network_socket, message, sizeof(message), 0); // TODO: validate recv()
+
+        printf("%s\n", message);
+    }
+}
 
 int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
 {
@@ -21,7 +55,6 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
         printf("ERROR: An issue occured with the WSA startup. Error code: %d \n\n", err);        
     }
 
-    int network_socket;
     network_socket = socket(AF_INET, SOCK_STREAM, 0);
 
     // specify address for the socket
@@ -49,8 +82,22 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
     // print out the server's response
     printf("Server: %s \n", server_response);
 
+    int th_err = pthread_create(&send_thread_id, 0, send_thread, 0);
+    if(th_err != 0)
+    {
+        printf("\n ERROR: Issue while creating send thread: %d \n\n", th_err);     
+    }
 
-    scanf("%s");
+    th_err = pthread_create(&recv_thread_id, 0, recv_thread, 0);
+    if(th_err != 0)
+    {
+        printf("\n ERROR: Issue while creating receive thread: %d \n\n", th_err);     
+    }
+
+    pthread_join(send_thread_id, NULL);
+    pthread_join(recv_thread_id, NULL);
+
+
     // closing the socket
     closesocket(network_socket);
     // close(network_socket);
