@@ -28,6 +28,8 @@ int server_socket;
 
 void* recv_send(void * arg)
 {
+    printf("Receive/Send thread is running. Listening for messages...\n");
+
     while(1)
     {
         struct client curr_client = *(struct client*) arg;

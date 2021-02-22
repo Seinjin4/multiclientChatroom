@@ -13,7 +13,6 @@
 
 int network_socket;
 
-
 pthread_t send_thread_id;
 pthread_t recv_thread_id;
 
@@ -45,7 +44,7 @@ void* send_thread(void* arg)
         
         if(send(network_socket, message, sizeof(message), 0) > sizeof(message)) // ok if send returns size of message or less
         {
-            printf("There was an issue sending the message. Error code: %d\n", WSAGetLastError());
+            printf("ERROR: There was an issue sending the message. Error code: %d\n", WSAGetLastError());
         }
     }
 }
