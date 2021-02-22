@@ -17,13 +17,30 @@ int network_socket;
 pthread_t send_thread_id;
 pthread_t recv_thread_id;
 
+char messages[256][256];
+int message_count = 0;
+
+void add_message_to_cache(char message[])
+{
+    strcpy(messages[message_count % 256], message);
+    message_count++;
+}
+
+void print_all_messages()
+{
+    system("cls");
+    for(int i=0; i<message_count;i++)
+    {
+        printf("%s \n", messages[i]);
+    }
+}
 
 void* send_thread(void* arg)
 {
     char message[256];
     while(1)
     {
-        printf("Message: ");
+        char message[256];
         scanf("%s", message);
         
         if(send(network_socket, message, sizeof(message), 0) > sizeof(message)) // ok if send returns size of message or less
@@ -35,12 +52,19 @@ void* send_thread(void* arg)
 
 void* recv_thread(void* arg)
 {
-    char message[256];
     while(1)
     {
-        recv(network_socket, message, sizeof(message), 0); // TODO: validate recv()
+        char message[256];
+        if(recv(network_socket, message, sizeof(message), 0) == -1 )
+        {
+            printf("You got disconnected from the server. Enter any key to continue...");
+            scanf("%s", 0);
+            pthread_exit(0);
+        } 
 
-        printf("%s\n", message);
+        add_message_to_cache(message);
+        print_all_messages();
+        // printf("%s\n", message);
     }
 }
 
@@ -73,6 +97,9 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
     else
     {
         printf("ERROR: An issue occured while making the connection. Error code: %d \n\n", WSAGetLastError());
+
+        WSACleanup();
+        return 0;
     }
 
     // receive data from the server
@@ -94,8 +121,8 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
         printf("\n ERROR: Issue while creating receive thread: %d \n\n", th_err);     
     }
 
-    pthread_join(send_thread_id, NULL);
     pthread_join(recv_thread_id, NULL);
+    pthread_join(send_thread_id, NULL);
 
 
     // closing the socket

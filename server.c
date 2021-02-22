@@ -33,15 +33,21 @@ void* recv_send(void * arg)
         struct client curr_client = *(struct client*) arg;
 
         char message[256];
-        recv(curr_client.socket, message, sizeof(message), 0);
+        if(recv(curr_client.socket, message, sizeof(message), 0) == -1)
+        {
+            printf("Client disconnected - %d\n", &curr_client);
+            pthread_exit(0);
+        }
 
-        printf("Client %d: %s", &curr_client, message);
+        printf("Client %d: %s\n", &curr_client, message);
 
         for(int i=0; i < client_count; i++)
         {
+            char con_message[256];
             if(&curr_client != &clients[i])
             {
-                send(clients[i].socket, message, sizeof(message), 0);
+                sprintf(con_message, "Client %d: %s", &curr_client, message);
+                send(clients[i].socket, con_message, sizeof(con_message), 0);
             }
         }
     }
@@ -60,7 +66,7 @@ void* server_listening(void* arg)
         // struct sockaddr_in client_address;
         new_client.socket = accept(server_socket, 0, 0);
 
-        printf("New client - %d\n", client_count);
+        printf("New client connected - %d\n", &new_client);
 
         char server_message[256] = "\n Hello, welcone to the chatroom!\n";
 
@@ -68,7 +74,7 @@ void* server_listening(void* arg)
 
         pthread_create(&recv_send_thread_id[client_count], NULL, recv_send, (void *) &clients[client_count]);
 
-        clients[0] = new_client;
+        clients[client_count] = new_client;
         client_count++;
     }
 }
