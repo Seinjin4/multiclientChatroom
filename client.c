@@ -40,7 +40,7 @@ void* send_thread(void* arg)
     while(1)
     {
         char message[256];
-        scanf("%s", message);
+        gets(message);
         
         if(send(network_socket, message, sizeof(message), 0) > sizeof(message)) // ok if send returns size of message or less
         {
@@ -56,7 +56,9 @@ void* recv_thread(void* arg)
         char message[256];
         if(recv(network_socket, message, sizeof(message), 0) == -1 )
         {
-            printf("You got disconnected from the server. Enter any key to continue...");
+            printf("You got disconnected from the server. Enter any key to exit...\n");
+            pthread_cancel(send_thread_id);
+
             scanf("%s", 0);
             pthread_exit(0);
         } 
@@ -101,11 +103,9 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
         return 0;
     }
 
-    // receive data from the server
     char server_response[256];
     recv(network_socket, server_response, sizeof(server_response), 0);
 
-    // print out the server's response
     printf("Server: %s \n", server_response);
 
     int th_err = pthread_create(&send_thread_id, 0, send_thread, 0);
@@ -120,9 +120,7 @@ int main(int argc, char** argv) // [0] - filename, [1] - ipv4, [2] - port
         printf("\n ERROR: Issue while creating receive thread: %d \n\n", th_err);     
     }
 
-    pthread_join(recv_thread_id, NULL);
-    pthread_join(send_thread_id, NULL);
-
+    pthread_join(recv_thread_id, NULL)
 
     // closing the socket
     closesocket(network_socket);

@@ -13,7 +13,6 @@
 
 struct client
 {
-    int id; // probs temporary
     int socket;
     struct sockaddr_in;
 };
@@ -28,16 +27,18 @@ int server_socket;
 
 void* recv_send(void * arg)
 {
-    printf("Receive/Send thread is running. Listening for messages...\n");
+    struct client curr_client = *(struct client*) arg;
+
+    printf("Client %d receive/Send thread is running. Listening for messages...\n", &curr_client);
 
     while(1)
     {
-        struct client curr_client = *(struct client*) arg;
 
         char message[256];
         if(recv(curr_client.socket, message, sizeof(message), 0) == -1)
         {
             printf("Client disconnected - %d\n", &curr_client);
+            shutdown(curr_client.socket, 0);
             pthread_exit(0);
         }
 
@@ -45,11 +46,11 @@ void* recv_send(void * arg)
 
         for(int i=0; i < client_count; i++)
         {
-            char con_message[256];
+            char conn_message[256];
             if(&curr_client != &clients[i])
             {
-                sprintf(con_message, "Client %d: %s", &curr_client, message);
-                send(clients[i].socket, con_message, sizeof(con_message), 0);
+                sprintf(conn_message, "Client %d: %s", &curr_client, message);
+                send(clients[i].socket, conn_message, sizeof(conn_message), 0);
             }
         }
     }
@@ -64,8 +65,6 @@ void* server_listening(void* arg)
         listen(server_socket, 5);
 
         struct client new_client;
-        // int client_socket;
-        // struct sockaddr_in client_address;
         new_client.socket = accept(server_socket, 0, 0);
 
         printf("New client connected - %d\n", &new_client);
